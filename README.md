@@ -1,2 +1,2 @@
-# UniversityToDoList
-ToDo list for students, to tick off the tasks (labs, coursework, etc.) that are already done and see the tasks that have to be completed.
+## Usage
+Run `gunicorn --bind 0.0.0.0:5000 server:app` in the terminal
