@@ -139,10 +139,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getUser'          
+                $ref: '#/components/schemas/getUserById'          
             application/xml:
               schema:
-                $ref: '#/components/schemas/getUser'
+                $ref: '#/components/schemas/getUserById'
         '400':
           description: Invalid ID supplied
         '404':
@@ -187,7 +187,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getTasks'          
+                type: array
+                items:
+                  $ref: '#/components/schemas/getTask'
       security:
         - userPermissions:
           - read
@@ -204,7 +206,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getGroups'          
+                type: array
+                items:
+                  $ref: '#/components/schemas/getGroup'          
       security:
         - userPermissions:
           - read    
@@ -243,36 +247,6 @@ paths:
       security:
         - userPermissions:
           - read
-    put:
-      tags:
-        - group
-      summary: Update group
-      description: Update info about group
-      operationId: updateGroup
-      parameters:
-        - name: name
-          in: query
-          description: 'The new name of group'
-          required: true
-          schema:
-            type: string
-        - name: description
-          in: query
-          description: 'The new description of group'
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid data supplied
-      security:
-        - groupPermissions:
-          - update:group
-        - userPermissions:
-          - read
-          - owner
   /group/{groupId}:
     get:
       tags:
@@ -305,6 +279,36 @@ paths:
       security:
         - userPermissions:
           - read
+    put:
+      tags:
+        - group
+      summary: Update group
+      description: Update info about group
+      operationId: updateGroup
+      parameters:
+        - name: name
+          in: query
+          description: 'The new name of group'
+          required: true
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: 'The new description of group'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid data supplied
+      security:
+        - groupPermissions:
+          - update:group
+        - userPermissions:
+          - read
+          - owner
     delete:
       tags:
         - group
@@ -331,7 +335,7 @@ paths:
           - write
           - owner
           - admin
-  /group/addMember:
+  /group/{groupId}/member:
     post:
       tags:
         - group
@@ -339,13 +343,20 @@ paths:
       description: Add a new member to group
       operationId: addMemberToGroup
       parameters:
-        - name: memberId
-          in: query
-          description: ID of the new member
+        - name: groupId
+          in: path
+          description: ID of group to return
           required: true
           schema:
             type: integer
             format: int64
+        - name: email
+          in: query
+          description: Email of the new member
+          required: true
+          schema:
+            type: string
+            format: email
       responses:
         '200':
           description: Successful operation
@@ -359,7 +370,6 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/{groupId}/deleteMember:
     delete:
       tags:
         - group
@@ -367,16 +377,16 @@ paths:
       description: Delete the member from group
       operationId: deleteMemberFromGroup
       parameters:
-        - name: memberId
-          in: query
-          description: ID of the deleting member
+        - name: groupId
+          in: path
+          description: ID of the group
           required: true
           schema:
             type: integer
             format: int64
-        - name: groupId
-          in: path
-          description: ID of the group
+        - name: memberId
+          in: query
+          description: ID of the deleting member
           required: true
           schema:
             type: integer
@@ -394,13 +404,53 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/addTask:
+  /group/{groupId}/member/all:
+    get:
+      tags:
+        - group
+      summary: Get all members of group
+      description: Returns a multiple object of members ID
+      operationId: getMembersByGroupId
+      parameters:
+        - name: groupId
+          in: path
+          description: ID of group to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/getUser'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Group not found
+      security:
+        - userPermissions:
+          - read
+          - admin
+  /group/{groupId}/task:
     post:
       tags:
         - group
       summary: Add task to group
       description: Add a new task to group
       operationId: addTaskToGroup
+      parameters:
+        - name: groupId
+          in: path
+          description: ID of group to return
+          required: true
+          schema:
+            type: integer
+            format: int64
       requestBody:
         description: Add a new task
         content:
@@ -425,7 +475,7 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/assignment:
+  /group/{groupId}/task/{taskId}:
     put:
       tags:
         - group
@@ -433,9 +483,16 @@ paths:
       description: Update status 
       operationId: updateAssignment
       parameters:
-        - name: assignmentId
+        - name: groupId
+          in: path
+          description: ID of group to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: taskId
           in: query
-          description: The assignment ID
+          description: The task ID
           required: true
           schema:
             type: integer
@@ -457,7 +514,6 @@ paths:
       security:
         - userPermissions:
           - read
-  /group/{groupId}/deleteTask:
     delete:
       tags:
         - group
@@ -465,16 +521,16 @@ paths:
       description: Delete the task from group
       operationId: deleteTaskFromGroup
       parameters:
-        - name: taskId
-          in: query
-          description: ID of the deleting task
+        - name: groupId
+          in: path
+          description: ID of the group where to delete task
           required: true
           schema:
             type: integer
             format: int64
-        - name: groupId
-          in: path
-          description: ID of the group where to delete task
+        - name: taskId
+          in: query
+          description: ID of the deleting task
           required: true
           schema:
             type: integer
@@ -492,37 +548,7 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/{groupId}/getMembers:
-    get:
-      tags:
-        - group
-      summary: Get all members of group
-      description: Returns a multiple object of members ID
-      operationId: getMembersByGroupId
-      parameters:
-        - name: groupId
-          in: path
-          description: ID of group to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/getMembers'          
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Group not found
-      security:
-        - userPermissions:
-          - read
-          - admin
-  /group/{groupId}/getTasks:
+  /group/{groupId}/task/all:
     get:
       tags:
         - group
@@ -543,7 +569,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getTasks'          
+                type: array
+                items:
+                 $ref: '#/components/schemas/getTask'
         '400':
           description: Invalid ID supplied
         '404':
@@ -576,28 +604,20 @@ components:
         - owner_id
       type: object
       properties:
+        id:
+          type: number
+        owner_id: 
+          type: integer
+          format: int64
+          example: 22
         name:
           type: string
           example: 'KN-217 Tasks'
         description:
           type: string
           example: 'This group is created to check KN-217 progress'
-        owner_id: 
-          type: integer
-          format: int64
-          example: 22
       xml:
         name: group
-    getTasks:
-      type: array
-      items:
-        type: integer
-        format: int64
-        example: 
-          - 1 
-          - 2 
-          - 4 
-          - 6 
     User:
       required:
         - user_id
@@ -621,7 +641,7 @@ components:
           example: 'qwerty2022'
       xml:
         name: user
-    getUser:
+    getUserById:
       required:
         - name
         - surname
@@ -644,27 +664,30 @@ components:
         - name
       type: object
       properties:
+        groupId:
+          type: integer
+          format: int64
+          example: 22
         name:
           type: string
           example: 'lab 3 PP'
         description:
           type: string
           example: 'deadline by 29.09.2022 (after it half a number of points)'
-        groupId:
-          type: integer
-          format: int64
-          example: 22
-    getMembers:
-      type: array
-      items:
-        type: integer
-        format: int64
-        example: 
-          - 22 
-          - 23 
-          - 64 
-          - 100 
-          - 202
+    getTask:
+      type: object
+      allOf:
+        - properties:
+            id:
+                type: integer
+                example: 1
+        - $ref: '#/components/schemas/Task'
+    getUser:
+      allOf:
+        - properties:
+            id:
+              type: integer
+        - $ref: '#/components/schemas/getUserById'
     getGroups:
       type: array
       items:
