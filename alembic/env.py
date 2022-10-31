@@ -4,8 +4,11 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+import sys
+from os.path import abspath, dirname
+sys.path.insert(0, dirname(dirname(abspath(__file__))))
 from models.User import Base as User
-from models.UserTaskStatus import Base as UserTaskStatus
 from models.Group import Base as Group
 from models.Task import Base as Task
 
@@ -20,9 +23,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = [User.metadata, UserTaskStatus.metadata, Group.metadata, Task.metadata]
+# from models import BaseModel
+# target_metadata = BaseModel.metadata
+target_metadata = [User.metadata, Group.metadata, Task.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

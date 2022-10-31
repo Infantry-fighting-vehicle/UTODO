@@ -23,23 +23,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/User'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/CreateUser'
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserFullInfo'          
         '400':
           description: Invalid data supplied
         '401':
@@ -50,22 +41,12 @@ paths:
       summary: Update user
       description: Update an existing user
       operationId: updateUser
-      parameters:
-        - name: name
-          in: query
-          description: Name of user that needs to be updated
-          schema:
-            type: string
-        - name: surname
-          in: query
-          description: Surname of user that needs to be updated
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: Password of user that needs to be updated
-          schema:
-            type: string
+      requestBody:
+        description: Update User Object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserFullInfo'
       responses:
         '200':
           description: Successful operation
@@ -100,10 +81,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Login'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Login'
+                $ref: '#/components/schemas/UserFullInfo'
         '400':
           description: Invalid email/password supplied
   /user/logout:
@@ -139,10 +117,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getUserById'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/getUserById'
+                $ref: '#/components/schemas/UserPublicInfo'          
         '400':
           description: Invalid ID supplied
         '404':
@@ -174,11 +149,11 @@ paths:
       security:
         - userPermissions:
           - admin
-  /user/getTasks:
+  /user/tasks:
     get:
       tags:
         - user
-      summary: Get user tasks
+      summary: Get tasks from all groups, where the user is a member
       description: Returns a multiple object of user_task ID
       operationId: getUserTasks
       responses:
@@ -189,30 +164,48 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/getTask'
+                  $ref: '#/components/schemas/UserTaskInfo'
       security:
         - userPermissions:
           - read
-  /user/getGroups:
-    get:
+  /user/tasks/{taskId}:
+    put:
       tags:
         - user
-      summary: Get user groups
-      description: Returns a multiple object of user_group ID
-      operationId: getUserGroups
+      summary: Update your status of assignment/task
+      description: Update status 
+      operationId: updateAssignment
+      parameters:
+        - name: taskId
+          in: path
+          description: The task ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          description: The status ID (done or undone)
+          required: true
+          schema:
+            type: string
+            example: done
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/getGroup'          
+                $ref: '#/components/schemas/UserTaskInfo'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Assignment/task not found
       security:
         - userPermissions:
-          - read    
-  /group:
+          - read
+
+  /groups:
     post:
       tags:
         - group
@@ -224,13 +217,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Group'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/Group'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Group'
+              $ref: '#/components/schemas/CreateGroup'
         required: true
       responses:
         '200':
@@ -238,16 +225,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Group'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/GroupInfo'          
         '405':
           description: Invalid input
       security:
         - userPermissions:
           - read
-  /group/{groupId}:
+    get:
+      tags:
+        - group
+      summary: Get user's groups
+      description: Returns a multiple object of user_group ID
+      operationId: getMyGroups
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupInfo'          
+      security:
+        - userPermissions:
+          - read    
+  /groups/{groupId}:
     get:
       tags:
         - group
@@ -268,10 +270,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getGroup'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/getGroup'
+                $ref: '#/components/schemas/GroupInfo'          
         '400':
           description: Invalid ID supplied
         '404':
@@ -301,6 +300,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfo'    
         '400':
           description: Invalid data supplied
       security:
@@ -324,6 +327,8 @@ paths:
             type: integer
             format: int64
       responses:
+        '200':
+          description: Successful operation
         '400':
           description: Invalid ID supplied
         '404':
@@ -335,7 +340,38 @@ paths:
           - write
           - owner
           - admin
-  /group/{groupId}/member:
+  /groups/{groupId}/members:
+    get:
+      tags:
+        - group
+      summary: Get all members of group
+      description: Returns a multiple object of members ID
+      operationId: getMembersByGroupId
+      parameters:
+        - name: groupId
+          in: path
+          description: ID of group to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberInfo'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Group not found
+      security:
+        - userPermissions:
+          - read
+          - admin
     post:
       tags:
         - group
@@ -360,6 +396,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberInfo'
         '404':
           description: User not found
         '405':
@@ -386,7 +426,7 @@ paths:
             format: int64
         - name: memberId
           in: query
-          description: ID of the deleting member
+          description: ID of the member (!!!memberId, not UserId)
           required: true
           schema:
             type: integer
@@ -404,13 +444,13 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/{groupId}/member/all:
+  /groups/{groupId}/tasks:
     get:
       tags:
         - group
-      summary: Get all members of group
-      description: Returns a multiple object of members ID
-      operationId: getMembersByGroupId
+      summary: Get all tasks of group
+      description: Returns a multiple object of tasks ID
+      operationId: getTasksByGroupId
       parameters:
         - name: groupId
           in: path
@@ -427,7 +467,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/getUser'
+                 $ref: '#/components/schemas/GroupTaskInfo'
         '400':
           description: Invalid ID supplied
         '404':
@@ -436,7 +476,6 @@ paths:
         - userPermissions:
           - read
           - admin
-  /group/{groupId}/task:
     post:
       tags:
         - group
@@ -456,13 +495,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Task'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/Task'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Task'
+              $ref: '#/components/schemas/CreateTask'
         required: true
       responses:
         '200':
@@ -475,45 +508,7 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/{groupId}/task/{taskId}:
-    put:
-      tags:
-        - group
-      summary: Update your status of assignment/task
-      description: Update status 
-      operationId: updateAssignment
-      parameters:
-        - name: groupId
-          in: path
-          description: ID of group to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: taskId
-          in: query
-          description: The task ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: statusId
-          in: query
-          description: The status ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Successful operation
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Assignment/task not found
-      security:
-        - userPermissions:
-          - read
+  /groups/{groupId}/tasks/{taskId}:
     delete:
       tags:
         - group
@@ -548,83 +543,10 @@ paths:
         - userPermissions:
           - write
           - owner
-  /group/{groupId}/task/all:
-    get:
-      tags:
-        - group
-      summary: Get all tasks of group
-      description: Returns a multiple object of tasks ID
-      operationId: getTasksByGroupId
-      parameters:
-        - name: groupId
-          in: path
-          description: ID of group to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                 $ref: '#/components/schemas/getTask'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Group not found
-      security:
-        - userPermissions:
-          - read
-          - admin
+
 components:
   schemas:
-    Group:
-      required:
-        - group_id
-        - name
-        - owner_id
-      type: object
-      properties:
-        name:
-          type: string
-          example: 'KN-217 Tasks'
-        description:
-          type: string
-          example: 'This group is created to check KN-217 progress'
-      xml:
-        name: group
-    getGroup:
-      required:
-        - group_id
-        - name
-        - owner_id
-      type: object
-      properties:
-        id:
-          type: number
-        owner_id: 
-          type: integer
-          format: int64
-          example: 22
-        name:
-          type: string
-          example: 'KN-217 Tasks'
-        description:
-          type: string
-          example: 'This group is created to check KN-217 progress'
-      xml:
-        name: group
-    User:
-      required:
-        - user_id
-        - name
-        - surname
-        - email
-        - password
+    CreateUser:
       type: object
       properties:
         name:
@@ -639,15 +561,30 @@ components:
         password:
           type: string
           example: 'qwerty2022'
-      xml:
-        name: user
-    getUserById:
-      required:
-        - name
-        - surname
-        - email
+    UserFullInfo:
       type: object
       properties:
+        id:
+          type: integer
+          example: 35
+        name:
+          type: string
+          example: 'John'
+        surname:
+          type: string
+          example: 'James'
+        email:
+          type: string
+          example: 'john.james.2022@email.com'
+        password:
+          type: string
+          example: 'qwerty2022'
+    UserPublicInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 35
         name:
           type: string
           example: 'John'
@@ -657,11 +594,53 @@ components:
         email:  
           type: string
           example: 'john.james.2022@email.com'
-      xml:
-        name: user
-    Task:
-      required: 
-        - name
+    CreateGroup:
+      type: object
+      properties:
+        owner_id: 
+          type: integer
+          format: int64
+          example: 22
+        name:
+          type: string
+          example: 'KN-215 Tasks'
+        description:
+          type: string
+          example: 'This group is created to check KN-215 progress'
+    GroupInfo:
+      type: object
+      properties:
+        id:
+          type: number
+        owner_id: 
+          type: integer
+          format: int64
+          example: 22
+        name:
+          type: string
+          example: 'KN-215 Tasks'
+        description:
+          type: string
+          example: 'This group is created to check KN-215 progress'
+    MemberInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 35
+        user_id:
+          type: integer
+          example: 35
+        name:
+          type: string
+          example: 'John'
+        surname:
+          type: string
+          example: 'James'
+        email:
+          type: string
+          example: 'john.james.2022@email.com'
+    CreateTask:
       type: object
       properties:
         groupId:
@@ -674,40 +653,42 @@ components:
         description:
           type: string
           example: 'deadline by 29.09.2022 (after it half a number of points)'
-    getTask:
-      type: object
-      allOf:
-        - properties:
-            id:
-                type: integer
-                example: 1
-        - $ref: '#/components/schemas/Task'
-    getUser:
-      allOf:
-        - properties:
-            id:
-              type: integer
-        - $ref: '#/components/schemas/getUserById'
-    getGroups:
-      type: array
-      items:
-        type: integer
-        format: int64
-        example: 
-          - 1 
-          - 3 
-    Login:
-      required:
-        - email
-        - password
+    GroupTaskInfo:
       type: object
       properties:
-        email:
+        id:
+            type: integer
+            example: 1
+        groupId:
+          type: integer
+          format: int64
+          example: 22
+        name:
           type: string
-          example: 'john.james.2022@email.com'
-        password:
+          example: 'lab 3 PP'
+        description:
           type: string
-          example: 'qwerty2022'
+          example: 'deadline by 29.09.2022 (after it half a number of points)'
+    UserTaskInfo:
+      type: object
+      properties:
+        id:
+            type: integer
+            example: 1
+        taskId:
+          type: integer
+          format: int64
+          example: 22
+        name:
+          type: string
+          example: 'lab 3 PP'
+        status: 
+          type: string
+          example: done
+        description:
+          type: string
+          example: 'deadline by 29.09.2022 (after it half a number of points)'
+  
   securitySchemes:
     groupPermissions:
       type: oauth2
