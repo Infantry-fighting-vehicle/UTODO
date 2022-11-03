@@ -8,9 +8,10 @@ from alembic import context
 import sys
 from os.path import abspath, dirname
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
-from models.User import Base as User
-from models.Group import Base as Group
-from models.Task import Base as Task
+# from models.User import Base as User
+# from models.Group import Base as Group
+# from models.Task import Base as Task
+from models.Base import metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,7 +26,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from models import BaseModel
 # target_metadata = BaseModel.metadata
-target_metadata = [User.metadata, Group.metadata, Task.metadata]
+target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

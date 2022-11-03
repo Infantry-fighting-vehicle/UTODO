@@ -1,8 +1,8 @@
-"""Added models
+"""added tables
 
-Revision ID: 26e2493c6c19
+Revision ID: 8b8ed4ae924a
 Revises: 
-Create Date: 2022-10-30 15:44:36.929469
+Create Date: 2022-11-02 21:38:34.958536
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '26e2493c6c19'
+revision = '8b8ed4ae924a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,23 +31,23 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=255), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('owner_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('groupMembers',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('group_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id', 'user_id', 'group_id')
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('group_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('groupTasks',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('group_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ),
+    sa.ForeignKeyConstraint(['group_id'], ['groups.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('userTasks',
@@ -55,8 +55,8 @@ def upgrade() -> None:
     sa.Column('status', sa.String(length=255), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('groupTask_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['groupTask_id'], ['groups.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['groupTask_id'], ['groupTasks.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
