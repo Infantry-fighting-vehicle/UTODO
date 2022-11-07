@@ -8,7 +8,7 @@ group = Blueprint('group', __name__, url_prefix='/groups')
 @group.route('/', methods=['POST', 'GET'])
 def groups():
     session = get_session()
-    user_id = request.args.get("user_id")
+    user_id = request.args.get("user_id") #temporary
 
     if request.method == 'POST':
         try:
@@ -50,11 +50,15 @@ def group_by_id(group_id):
     if request.method == 'GET':
         return jsonify(GroupInfoSchema().dump(group))
     elif request.method == 'PUT':
-        try:
-            new_group = GroupInfoSchema().load(request.json)
-        except ValidationError:
-            abort(400)
-        session.query(Group).filter(Group.id==group.id).update(GroupInfoSchema().dump(new_group))
+        updated_info = dict()
+        print(request.args.get("name"))
+        if request.args.get("name"):
+            updated_info["name"] = request.args.get("name")
+        if request.args.get("description"):
+            updated_info["description"] = request.args.get("description")
+        
+        for key, val in updated_info.items():
+            session.query(Group).filter(Group.id==group.id).update({key: val})
         session.commit()
         session.refresh(group)
         return jsonify(GroupInfoSchema().dump(group))

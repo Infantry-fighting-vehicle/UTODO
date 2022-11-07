@@ -9,12 +9,17 @@ user = Blueprint('user', __name__, url_prefix='/user')
 @user.route('/', methods=['PUT'])
 def user_update():
     session = get_session()
-    try:
-        user = UserFullInfoSchema().load(request.json)
-    except ValidationError:
-        abort(400)
-    user.password = generate_password_hash(user.password)
-    session.query(User).filter(User.id == user.id).update(UserFullInfoSchema().dump(user))
+
+    user = session.query(User).filter(User.id == request.json["id"]).first()
+    if not user:
+        abort(404)
+
+    for key, val in request.json.items():
+        session.query(User).filter(User.id == user.id).update({key: val})
+        print(key, val)
+
+    if 'password' in request.json:
+        user.password = generate_password_hash(user.password)
     session.commit()
     return jsonify(UserFullInfoSchema().dump(
         session.query(User).filter(User.id == user.id).first()))
@@ -40,7 +45,7 @@ def user_by_id(user_id):
 @user.route('/tasks', methods=['GET'])
 def get_user_tasks():
     session = get_session()
-    user_id = request.args.get("user_id")
+    user_id = request.args.get("user_id") #temporary
     user_tasks = session.query(UserTask)\
         .filter(UserTask.user_id==user_id).all()
 
@@ -60,6 +65,11 @@ def change_user_task_status(task_id):
     if not task_id.isnumeric():
         abort(400)
 
+    user_task = session.query(UserTask)\
+        .filter(UserTask.id==task_id).first()
+    if not user_task:
+        abort(404)
+
     def get_fullinfo_task(user_task):
         group_task = session.query(GroupTask).filter(GroupTask.id==user_task.groupTask_id).first()
         task = UserTaskInfoSchema().dump(user_task)
@@ -67,11 +77,6 @@ def change_user_task_status(task_id):
         task["name"] = group_task.name
         task["description"] = group_task.description
         return task
-
-    user_task = session.query(UserTask)\
-        .filter(UserTask.id==task_id).first()
-    if not user_task:
-        abort(404)
 
     if request.method == 'GET':
         return jsonify(get_fullinfo_task(user_task))
