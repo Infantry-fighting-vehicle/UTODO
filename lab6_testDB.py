@@ -15,5 +15,5 @@ print(a)
 session.add(a)
 session.commit()
 
-# for class_instance in session.query(models.User).all():
-#     print(vars(class_instance))
+for class_instance in session.query(models.User).all():
+    print(vars(class_instance))

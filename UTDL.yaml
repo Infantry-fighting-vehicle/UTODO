@@ -169,6 +169,34 @@ paths:
         - userPermissions:
           - read
   /user/tasks/{taskId}:
+    get:
+      tags:
+        - user
+      summary: Update your status of assignment/task
+      description: Update status 
+      operationId: getAssignment
+      parameters:
+        - name: taskId
+          in: path
+          description: The task ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTaskInfo'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Assignment/task not found
+      security:
+        - userPermissions:
+          - read
     put:
       tags:
         - user
@@ -249,7 +277,7 @@ paths:
       security:
         - userPermissions:
           - read    
-  /groups/{groupId}:
+  /groups/{group_id}:
     get:
       tags:
         - group
@@ -257,7 +285,7 @@ paths:
       description: Returns a single group
       operationId: getGroupById
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of group to return
           required: true
@@ -319,7 +347,7 @@ paths:
       description: Delete everything about group
       operationId: deleteGroup
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of the group that needs to be deleted
           required: true
@@ -340,15 +368,15 @@ paths:
           - write
           - owner
           - admin
-  /groups/{groupId}/members:
+  /groups/{group_id}/members:
     get:
       tags:
         - group
       summary: Get all members of group
       description: Returns a multiple object of members ID
-      operationId: getMembersByGroupId
+      operationId: getMembersByGroup_id
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of group to return
           required: true
@@ -379,7 +407,7 @@ paths:
       description: Add a new member to group
       operationId: addMemberToGroup
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of group to return
           required: true
@@ -417,14 +445,14 @@ paths:
       description: Delete the member from group
       operationId: deleteMemberFromGroup
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of the group
           required: true
           schema:
             type: integer
             format: int64
-        - name: memberId
+        - name: member_id
           in: query
           description: ID of the member (!!!memberId, not UserId)
           required: true
@@ -444,15 +472,15 @@ paths:
         - userPermissions:
           - write
           - owner
-  /groups/{groupId}/tasks:
+  /groups/{group_id}/tasks:
     get:
       tags:
         - group
       summary: Get all tasks of group
       description: Returns a multiple object of tasks ID
-      operationId: getTasksByGroupId
+      operationId: getTasksByGroup_id
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of group to return
           required: true
@@ -483,7 +511,7 @@ paths:
       description: Add a new task to group
       operationId: addTaskToGroup
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of group to return
           required: true
@@ -508,7 +536,44 @@ paths:
         - userPermissions:
           - write
           - owner
-  /groups/{groupId}/tasks/{taskId}:
+  /groups/{group_id}/tasks/{taskId}:
+    get:
+      tags:
+        - group
+      summary: read task from group
+      description: read the task from group
+      operationId: getTaskFromGroup
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of the group where to read task
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: taskId
+          in: path
+          description: ID of the reading task
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupTaskInfo'
+        '404':
+          description: User not found
+        '405':
+          description: Invalid input
+      security:
+        - groupPermissions:
+          - read:task
+        - userPermissions:
+          - read
     delete:
       tags:
         - group
@@ -516,7 +581,7 @@ paths:
       description: Delete the task from group
       operationId: deleteTaskFromGroup
       parameters:
-        - name: groupId
+        - name: group_id
           in: path
           description: ID of the group where to delete task
           required: true
@@ -524,7 +589,7 @@ paths:
             type: integer
             format: int64
         - name: taskId
-          in: query
+          in: path
           description: ID of the deleting task
           required: true
           schema:
@@ -597,10 +662,6 @@ components:
     CreateGroup:
       type: object
       properties:
-        owner_id: 
-          type: integer
-          format: int64
-          example: 22
         name:
           type: string
           example: 'KN-215 Tasks'
@@ -643,10 +704,6 @@ components:
     CreateTask:
       type: object
       properties:
-        groupId:
-          type: integer
-          format: int64
-          example: 22
         name:
           type: string
           example: 'lab 3 PP'
@@ -659,7 +716,7 @@ components:
         id:
             type: integer
             example: 1
-        groupId:
+        group_id:
           type: integer
           format: int64
           example: 22
@@ -675,7 +732,11 @@ components:
         id:
             type: integer
             example: 1
-        taskId:
+        task_id:
+          type: integer
+          format: int64
+          example: 22
+        user_id:
           type: integer
           format: int64
           example: 22
