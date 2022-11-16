@@ -11,10 +11,31 @@ from schemas import *
 
 from flask import jsonify, request, abort
 from marshmallow import ValidationError
+from models import *
+from schemas import *
+from schemas.Role import RoleSchema
 
-auth = Blueprint('auth', __name__, url_prefix='/')
+from flask_httpauth import HTTPBasicAuth
 
-@auth.route('/user', methods=['POST'])
+authMaksym = Blueprint('auth', __name__, url_prefix='/')
+auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_password(username, password):
+    session = get_session()
+    user = session.query(User).filter(User.email == username).first()
+    if not user:
+        return False
+    if check_password_hash(user.password, password):
+        return True
+    return False
+
+def get_current_user() -> User:
+    Session = get_session()()
+    username = auth.current_user()
+    return Session.query(User).filter(User.email==username).first()
+
+@authMaksym.route('/user', methods=['POST'])
 def user():
     session = get_session()
     try:
@@ -29,10 +50,15 @@ def user():
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
+
+    userObj = session.query(User).filter(User.email==new_user.email).first()
+    new_role = Role(id=userObj.id, value="User")
+    session.add(new_role)
+    session.commit()
     return jsonify(UserFullInfoSchema().dump(new_user))
 
 
-@auth.route('/user/login', methods=['GET'])
+@authMaksym.route('/user/login', methods=['GET'])
 def login():
     session = get_session()
     email = request.args.get("email")
@@ -46,6 +72,7 @@ def login():
     else:
         abort(404)
 
-@auth.route('/user/logout', methods=['GET'])
+@authMaksym.route('user/logout', methods=['GET'])
+@auth.login_required
 def logout():
     return jsonify({'Message': 'Successfully logged out =)'})

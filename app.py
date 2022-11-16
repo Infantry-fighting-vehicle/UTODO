@@ -10,7 +10,7 @@ def create_app(test_config=None):
     session_init()
 
     from api import auth, user, group
-    app.register_blueprint(auth.auth)
+    app.register_blueprint(auth.authMaksym)
     app.register_blueprint(user.user)
     app.register_blueprint(group.group)
 

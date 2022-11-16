@@ -14,7 +14,7 @@ from models.Base import Base
 # metadata = Base.metadata
 
 class Group(Base):
-    __tablename__ = "groups"
+    __tablename__ = "groups_"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
@@ -29,4 +29,4 @@ class GroupMember(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'))
-    group_id = Column(Integer, ForeignKey("groups.id", ondelete='CASCADE'))
+    group_id = Column(Integer, ForeignKey("groups_.id", ondelete='CASCADE'))

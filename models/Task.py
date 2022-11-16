@@ -19,7 +19,7 @@ class GroupTask(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
     description = Column(Text)
-    group_id =  Column(Integer, ForeignKey("groups.id", ondelete='CASCADE'))
+    group_id =  Column(Integer, ForeignKey("groups_.id", ondelete='CASCADE'))
 
     user_tasks = relationship("UserTask", cascade="all, delete-orphan")
 
