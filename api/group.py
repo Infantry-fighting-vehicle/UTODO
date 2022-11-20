@@ -32,7 +32,6 @@ def groups():
     if request.method == 'POST':
         try:
             new_group = CreateGroupSchema().load(request.json)
-            assert(user_id)
             new_group.owner_id = user_id
         except (ValidationError, AssertionError):
             abort(400)

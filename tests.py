@@ -42,6 +42,20 @@ def test_create_user():
     assert res.json.get('id')
     test_user_id = res.json['id']
 
+def test_update_user():
+    global test_user_id
+    test_user_json['name'] = 'John3'
+
+    res = client.put('/user', json=test_user_json, **authentication_headers())
+
+    assert res.status_code == 200
+    check_data(res.json, test_user_json)
+    assert res.json.get('id')
+    assert test_user_id == res.json['id']
+
+    test_user_json['name'] = 'John2'
+    res = client.put('/user', json=test_user_json, **authentication_headers())
+
 def test_del_user_without_credentials():
     global test_user_id
     assert test_user_id != 'not found'
@@ -93,15 +107,20 @@ def test_group_create():
     test_group_id = res.json['id']
     assert res.json.get('owner_id') == test_user_id
 
+def test_group_anonymous_create():
+    global test_group_id, test_user_id
+    res = client.post('/groups', json={}, **authentication_headers())
+    assert res.status_code == 400
+
 def test_get_groups():
     global test_group_id
     res = client.get('/groups', **authentication_headers())
 
-    assert res.status_code == 200
     for group in res.json:
         if group['id'] == test_group_id:
+            assert res.status_code == 200
             return
-    assert False ## group not found
+    assert res.status_code == 400
 
 def test_get_not_existing_group_by_id():
     global test_group_id
@@ -264,7 +283,7 @@ def test_del_group():
         test_get_group_by_id()
     except AssertionError:
         return
-    assert False # group has not be found
+    assert res.status == 'NOT_FOUND'
 
 def test_del_user():
     global test_user_id

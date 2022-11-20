@@ -27,22 +27,22 @@ def get_current_user() -> User:
     username = auth.username()
     return Session.query(User).filter(User.email==username).first()
 
-@user.route('/', methods=['PUT'])
+@user.route('', methods=['PUT'])
 @auth.login_required
 def user_update():
     session = get_session()
     
     for key, val in request.json.items():
+        if key == 'password':
+            val = generate_password_hash(val)
         session.query(User).filter(User.id == get_current_user().id).update({key: val})
         print(key, val)
 
-    if 'password' in request.json:
-        user.password = generate_password_hash(user.password)
     session.commit()
     return jsonify(UserFullInfoSchema().dump(
         session.query(User).filter(User.id == get_current_user().id).first()))
 
-@user.route('/', methods=['POST'])
+@user.route('', methods=['POST'])
 def user_create():
     session = get_session()
 
