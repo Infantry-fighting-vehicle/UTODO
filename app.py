@@ -14,11 +14,6 @@ def create_app(test_config=None):
     app.register_blueprint(user.user)
     app.register_blueprint(group.group)
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
-
     return app
 
 
@@ -38,10 +33,6 @@ def add_cors_headers(response):
 @app.errorhandler(400)
 def BadRequest(e):
     return jsonify({'Error': 'Invalid input'}), 400
-
-@app.errorhandler(401)
-def Unauthorized(e):
-    return jsonify({'Error': 'Unauthorized user'}), 401
 
 @app.errorhandler(403)
 def Forbidden(e):

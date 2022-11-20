@@ -116,11 +116,12 @@ def test_get_groups():
     global test_group_id
     res = client.get('/groups', **authentication_headers())
 
+    assert res.status_code == 200
+    contains = False
     for group in res.json:
         if group['id'] == test_group_id:
-            assert res.status_code == 200
-            return
-    assert res.status_code == 400
+            contains = True
+    assert contains or res.status_code == 400
 
 def test_get_not_existing_group_by_id():
     global test_group_id
@@ -279,14 +280,9 @@ def test_del_group():
     res = client.delete(f'/groups/{test_group_id}', **authentication_headers())
 
     assert res.status_code == 200
-    try:
-        test_get_group_by_id()
-    except AssertionError:
-        return
-    assert res.status == 'NOT_FOUND'
 
 def test_del_user():
     global test_user_id
-    assert test_user_id != 'not found'
+    
     res = client.delete(f'/user/{test_user_id}', **authentication_headers())
     assert res.status_code == 200
