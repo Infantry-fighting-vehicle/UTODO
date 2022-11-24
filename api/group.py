@@ -23,7 +23,7 @@ def get_current_user() -> User:
     username = auth.username()
     return Session.query(User).filter(User.email==username).first()
 # temporary using query parameters for user id
-@group.route('/', methods=['POST', 'GET'])
+@group.route('', methods=['POST', 'GET'])
 @auth.login_required
 def groups():
     session = get_session()
@@ -32,13 +32,12 @@ def groups():
     if request.method == 'POST':
         try:
             new_group = CreateGroupSchema().load(request.json)
-            assert(user_id)
             new_group.owner_id = user_id
         except (ValidationError, AssertionError):
             abort(400)
 
         session.add(new_group)
-        session.flush()
+        session.commit()
         session.refresh(new_group)
 
         # add owner to group members

@@ -58,11 +58,13 @@ def user():
     return jsonify(UserFullInfoSchema().dump(new_user))
 
 
-@authMaksym.route('/user/login', methods=['GET'])
+@authMaksym.route('/user/me', methods=['GET'])
 def login():
     session = get_session()
     email = request.args.get("email")
     password = request.args.get("password")
+    if not password:
+        password = ''
 
     user = session.query(User).filter(User.email==email).first()
     if user and check_password_hash(user.password, password):
@@ -71,8 +73,3 @@ def login():
         abort(403)
     else:
         abort(404)
-
-@authMaksym.route('user/logout', methods=['GET'])
-@auth.login_required
-def logout():
-    return jsonify({'Message': 'Successfully logged out =)'})

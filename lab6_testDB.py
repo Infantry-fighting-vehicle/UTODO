@@ -1,13 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from db import get_session
 import models
 
-connection_string = 'mysql://root:000000@127.0.0.1:3306/utodolist'
-
-engine = create_engine(connection_string, echo=True)
-
-Session = sessionmaker(bind=engine)
-session = Session()
+session = get_session()
 
 a = models.User(name="Stepan", surname="vald", email="text@example.com", password="superstrong")
 

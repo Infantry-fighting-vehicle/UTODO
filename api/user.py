@@ -27,20 +27,40 @@ def get_current_user() -> User:
     username = auth.username()
     return Session.query(User).filter(User.email==username).first()
 
-@user.route('/', methods=['PUT'])
+@user.route('', methods=['PUT'])
 @auth.login_required
 def user_update():
     session = get_session()
     
     for key, val in request.json.items():
+        if key == 'password':
+            val = generate_password_hash(val)
         session.query(User).filter(User.id == get_current_user().id).update({key: val})
         print(key, val)
 
-    if 'password' in request.json:
-        user.password = generate_password_hash(user.password)
     session.commit()
     return jsonify(UserFullInfoSchema().dump(
         session.query(User).filter(User.id == get_current_user().id).first()))
+
+@user.route('', methods=['POST'])
+def user_create():
+    session = get_session()
+
+    print(request.get_json())
+    try:
+        print()
+        user = CreateUserSchema().load(request.get_json())
+    except (ValidationError, AssertionError):
+        abort(400)
+
+    if 'password' in request.json:
+        user.password = generate_password_hash(user.password)
+
+    session.add(user)
+    session.commit()
+    return jsonify(UserFullInfoSchema().dump(
+        session.query(User).filter(User.id == get_current_user().id).first()))
+
 
 @user.route('/<user_id>', methods=['GET', 'DELETE'])
 @auth.login_required
@@ -113,6 +133,7 @@ def change_user_task_status(task_id):
         task["task_id"] = group_task.id
         task["name"] = group_task.name
         task["description"] = group_task.description
+        task["status"] = user_task.status
         return task
 
     if request.method == 'GET':
